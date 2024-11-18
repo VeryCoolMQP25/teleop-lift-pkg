@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'mqp_teleop'
+package_name = 'teleop_lift'
 
 setup(
     name=package_name,
@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'teleop = mqp_teleop.teleop:main'
+            'teleop = teleop_lift.teleop:main'
         ],
     },
 )

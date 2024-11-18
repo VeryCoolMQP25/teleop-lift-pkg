@@ -20,7 +20,7 @@ class JoyListener(Node):
             self.joy_callback,
             10  # Queue size
         )
-
+        self.get_logger().info('Started listening to /joy messages')
     def joy_callback(self, msg):
         global power
         # Print out the button and axis values
@@ -31,19 +31,24 @@ class JoyListener(Node):
             command = msg.axes[LIFT_AXIS]
         power = command
         self.get_logger().debug(f'States: {buttons[LIFT_ENABLE_BTN]}, {axes[LIFT_AXIS]}')
-        # self.get_logger().info(f'Buttons: {buttons}')
-        # self.get_logger().info(f'Axes: {axes}')
 
 class LiftPublisher(Node):
     def __init__(self):
         super().__init__('lift_raw_publisher')
+        self.topic = "/lift_raw"
+        self.period = 0.1 #s
         self.msg = Float32()
-        self.publisher: Publisher = self.create_publisher(Float32, "/lift_raw", 1)
-        self.timer = self.create_timer(0.05, self.callback)
+        self.publisher: Publisher = self.create_publisher(Float32, self.topic, 1)
+        self.timer = self.create_timer(self.period, self.callback)
+        self.get_logger().info('started publishing to {} every {}s.'.format(self.topic, self.period))
 
     def callback(self):
         self.msg.data = float(power)
         self.publisher.publish(self.msg)
+        if abs(power) < 0.001:
+            self.get_logger().info('Lift stopped.')
+        else:
+            self.get_logger().info('set lift to {}% power.'.format(self.msg.data*100))
 
 def main(args=None):
     rclpy.init(args=args)
