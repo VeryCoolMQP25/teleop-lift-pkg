@@ -4,14 +4,16 @@ from rclpy.node import Node
 from sensor_msgs.msg import Joy
 from std_msgs.msg import Float32
 from rclpy.publisher import Publisher
+from rclpy.logging import LoggingSeverity
 
 LIFT_ENABLE_BTN = 5 # right bumper
-LIFT_AXIS = 4 # right stick Y
+LIFT_AXIS = 3 # right stick Y
 
 power: float = 0.0
 
 class JoyListener(Node):
     def __init__(self):
+        self.get_logger().set_level(LoggingSeverity.INFO)
         super().__init__('joy_listener')
         # Subscriber to the /joy topic
         self.subscription = self.create_subscription(
@@ -30,7 +32,7 @@ class JoyListener(Node):
         if (msg.buttons[LIFT_ENABLE_BTN]):
             command = msg.axes[LIFT_AXIS]
         power = command
-        self.get_logger().debug(f'States: {buttons[LIFT_ENABLE_BTN]}, {axes[LIFT_AXIS]}')
+        self.get_logger().info(f'States: {buttons[LIFT_ENABLE_BTN]}, {axes[LIFT_AXIS]}')
 
 class LiftPublisher(Node):
     def __init__(self):
@@ -51,12 +53,14 @@ class LiftPublisher(Node):
             self.get_logger().info('set lift to {}% power.'.format(self.msg.data*100))
 
 def main(args=None):
+    print("rcl init")
     rclpy.init(args=args)
     executor = rclpy.executors.MultiThreadedExecutor()
     joy_listener = JoyListener()
     lift_publish = LiftPublisher()
     executor.add_node(joy_listener)
     executor.add_node(lift_publish)
+    print("spinning")
     executor.spin()
     joy_listener.destroy_node()
     lift_publish.destroy_node()
